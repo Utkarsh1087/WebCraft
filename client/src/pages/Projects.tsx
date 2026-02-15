@@ -1,0 +1,64 @@
+import React from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import type { Project } from '../types/index.ts'
+import { useEffect } from 'react'
+import { Loader2Icon } from 'lucide-react'
+import { dummyConversations } from '../assets/assets.ts'
+import { dummyProjects } from '../assets/assets.ts'
+import Navbar from '../components/Navbar.tsx'
+
+const Projects = () => {
+
+  const { projectId } = useParams()
+  const navigate = useNavigate()
+
+  const [project, setProject] = useState<Project | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const [isGenerating, setIsgenerating] = useState(true)
+  const [device, setDevice] = useState<'phone' | 'tablet' | 'desktop'>('desktop')
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
+  const fetchProject = async () => {
+    const project = dummyProjects.find(project => project.id === projectId)
+    setTimeout(() => {
+      if (project) {
+        setProject({ ...project, conversation: dummyConversations });
+        setLoading(false)
+        setIsgenerating(project.current_code ? false : true)
+      }
+    })
+  }
+
+  useEffect(() => {
+    fetchProject()
+  }, [projectId])
+
+  if (loading) {
+    return (
+      <>
+        
+        <div className='flex items-center justify-center h-screen'>
+          <Loader2Icon className='size-7 animate-spin text-violet-200' />
+        </div>
+
+      </>
+    )
+  }
+  return project ? (
+    <div>
+      <h1>Projects</h1>
+    </div>
+  )
+    :
+    (
+      <div className='flex items-center justify-center h-screen'>
+        <p className='text-2xl font-medium text-gray-200'> Unable to load project :(</p>
+      </div>
+    )
+}
+
+export default Projects
