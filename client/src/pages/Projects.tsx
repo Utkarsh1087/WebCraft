@@ -20,6 +20,7 @@ const Projects = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isSaved, setIsSaved] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(300)
   const isResizing = useRef(false)
 
@@ -86,20 +87,20 @@ const Projects = () => {
   }
 
   return project ? (
-    <div className='flex flex-col h-[calc(100vh-10rem)] w-full text-white bg-black overflow-hidden'>
+    <div className='flex flex-col h-screen w-full text-white bg-black overflow-hidden'>
 
       {/* Top Bar */}
       <header className='flex items-center justify-between px-6 h-16 border-b border-gray-800 bg-[#0F1117] shrink-0'>
         {/* Left Section: Logo & Project Info */}
         <div className='flex items-center gap-4 flex-1 min-w-0'>
-          <div className='bg-white rounded-full p-1 leading-none shrink-0 cursor-pointer' onClick={() => navigate('/')}>
+          <div className='bg-white rounded-full p-1 leading-none shrink-0 cursor-pointer active:scale-95 hover:brightness-110 transition-all duration-300 ease-in-out' onClick={() => navigate('/')}>
             <img src="/favicon.svg" alt="logo" className='size-5' />
           </div>
           <div className='flex flex-col min-w-0'>
-            <p className='text-sm font-bold truncate leading-tight tracking-tight text-gray-100'>
+            <p className='text-sm font-bold truncate leading-tight tracking-wide text-white'>
               {project.name}
             </p>
-            <p className='text-[10px] text-gray-500 truncate font-light'>
+            <p className='text-[10px] text-gray-600 truncate font-light'>
               Previewing last saved version
             </p>
           </div>
@@ -109,19 +110,31 @@ const Projects = () => {
         <div className='flex items-center gap-1 bg-[#1A1D26] p-1 rounded-xl border border-gray-800/50'>
           <button
             onClick={() => setDevice('phone')}
-            className={`p-1.5 rounded-lg transition-colors ${device === 'phone' ? "bg-gray-700 text-white" : "text-gray-500 hover:text-white"}`}
+            title="Mobile Preview"
+            className={`p-1.5 rounded-lg transition-all duration-300 ease-in-out cursor-pointer active:scale-95 ${device === 'phone'
+              ? "bg-white/10 text-white scale-105 border border-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.3)]"
+              : "text-gray-500 border border-transparent hover:text-white hover:-translate-y-0.5 hover:shadow-md"
+              }`}
           >
             <SmartphoneIcon size={16} />
           </button>
           <button
             onClick={() => setDevice('tablet')}
-            className={`p-1.5 rounded-lg transition-colors ${device === 'tablet' ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white"}`}
+            title="Tablet Preview"
+            className={`p-1.5 rounded-lg transition-all duration-300 ease-in-out cursor-pointer active:scale-95 ${device === 'tablet'
+              ? "bg-white/10 text-white scale-105 border border-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.3)]"
+              : "text-gray-400 border border-transparent hover:text-white hover:-translate-y-0.5 hover:shadow-md"
+              }`}
           >
             <Tablet size={16} />
           </button>
           <button
             onClick={() => setDevice('desktop')}
-            className={`p-1.5 rounded-lg transition-colors ${device === 'desktop' ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white"}`}
+            title="Desktop Preview"
+            className={`p-1.5 rounded-lg transition-all duration-300 ease-in-out cursor-pointer active:scale-95 ${device === 'desktop'
+              ? "bg-white/10 text-white scale-105 border border-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.3)]"
+              : "text-gray-400 border border-transparent hover:text-white hover:-translate-y-0.5 hover:shadow-md"
+              }`}
           >
             <LaptopIcon size={16} />
           </button>
@@ -132,16 +145,17 @@ const Projects = () => {
           <button
             onClick={saveProject}
             disabled={isSaving}
-            className='flex items-center gap-2 px-4 py-1.5 text-xs font-semibold bg-[#1A1D26] hover:bg-[#252A35] border border-gray-800 rounded-xl transition-all active:scale-95 text-gray-200'
+            className='flex items-center gap-2 px-4 py-1.5 text-xs font-semibold bg-[#1A1D26] hover:bg-[#252A35] hover:brightness-110 border border-gray-800 rounded-xl transition-all duration-300 ease-in-out active:scale-95 text-gray-400 opacity-80 hover:opacity-100 hover:-translate-y-0.5 hover:shadow-md cursor-pointer'
           >
             <SaveIcon size={14} />
             <span>Save</span>
+            <span className={`ml-1 size-2 rounded-full ${isSaved ? 'bg-green-400 shadow-[0_0_4px_rgba(74,222,128,0.5)]' : 'bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.5)]'}`} title={isSaved ? 'Saved' : 'Unsaved changes'} />
           </button>
 
           <Link
             target='_blank'
             to={`/preview/${projectId}`}
-            className='flex items-center gap-2 px-4 py-1.5 text-xs font-semibold bg-[#1A1D26] hover:bg-[#252A35] border border-gray-800 rounded-xl transition-all active:scale-95 text-gray-200'
+            className='flex items-center gap-2 px-4 py-1.5 text-xs font-semibold bg-[#1A1D26] hover:bg-[#252A35] hover:brightness-110 border border-gray-800 rounded-xl transition-all duration-300 ease-in-out active:scale-95 text-gray-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer'
           >
             <FullscreenIcon size={14} />
             <span>Preview</span>
@@ -149,7 +163,7 @@ const Projects = () => {
 
           <button
             onClick={downloadCode}
-            className='flex items-center gap-2 px-5 py-1.5 text-xs font-bold bg-[#2563EB] hover:bg-blue-600 rounded-xl transition-all active:scale-95 text-white shadow-lg shadow-blue-500/20'
+            className='flex items-center gap-2 px-5 py-1.5 text-xs font-bold bg-[#2563EB] hover:bg-blue-500 hover:brightness-110 rounded-xl transition-all duration-300 ease-in-out active:scale-95 text-white shadow-lg shadow-blue-500/25 hover:-translate-y-0.5 hover:shadow-blue-500/40 cursor-pointer'
           >
             <ArrowBigDownDashIcon size={14} />
             <span>Download</span>
@@ -157,7 +171,7 @@ const Projects = () => {
 
           <button
             onClick={togglePublish}
-            className='flex items-center gap-2 px-5 py-1.5 text-xs font-bold bg-[#6366F1] hover:bg-indigo-600 rounded-xl transition-all active:scale-95 text-white shadow-lg shadow-indigo-500/20'
+            className='flex items-center gap-2 px-5 py-1.5 text-xs font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 hover:brightness-110 rounded-xl transition-all duration-300 ease-in-out active:scale-95 text-white shadow-lg shadow-indigo-500/30 hover:-translate-y-0.5 hover:shadow-indigo-500/50 cursor-pointer'
           >
             <EyeIcon size={14} />
             <span>Publish</span>
@@ -166,37 +180,74 @@ const Projects = () => {
       </header>
 
       {/* Main Content Area */}
-      <div className='flex flex-1 min-h-0 overflow-hidden'>
-        <Sidebar
-          isMenuOpen={isMenuOpen}
-          project={project}
-          setProject={setProject}
-          isGenerating={isGenerating}
-          setIsGenerating={setIsGenerating}
-          width={sidebarWidth}
-        />
+      <div className='flex flex-1 min-h-0 overflow-hidden flex-col lg:flex-row gap-6 p-6 pt-0 mt-6 mb-20 items-stretch'>
+        {/* Chat Section Wrapper */}
+        <div className='h-full rounded-2xl overflow-hidden border border-gray-800/50 bg-[#0F1117] shadow-xl relative'>
+          <Sidebar
+            isMenuOpen={isMenuOpen}
+            project={project}
+            setProject={setProject}
+            isGenerating={isGenerating}
+            setIsGenerating={setIsGenerating}
+            width={sidebarWidth}
+          />
+        </div>
 
         {/* Resize Handle */}
         <div
           onMouseDown={handleMouseDown}
-          className='w-1 hover:w-1.5 bg-gray-800 hover:bg-indigo-500/50 cursor-col-resize transition-all shrink-0 active:bg-indigo-500'
+          className='w-1 hover:w-1.5 bg-gray-800 hover:bg-indigo-500/50 cursor-col-resize transition-all duration-300 ease-in-out shrink-0 active:bg-indigo-500'
         />
 
         {/* Preview Area */}
-        <main className='flex-1 min-w-0 bg-[#090A0D] p-6 relative overflow-hidden'>
-          <div className='w-full h-full border border-gray-800/50 rounded-2xl bg-[#0F1117] flex flex-col items-center justify-center shadow-2xl relative overflow-hidden'>
+        <main className='flex-1 min-w-0 bg-[#090A0D] rounded-2xl overflow-hidden relative border border-gray-800/50 h-full'>
+          <style>{`
+            @keyframes gradient-slide {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(200%); }
+            }
+            @keyframes icon-pulse {
+              0%, 100% { transform: scale(1); opacity: 1; }
+              50% { transform: scale(1.08); opacity: 0.85; }
+            }
+            @keyframes ellipsis {
+              0% { content: ''; }
+              25% { content: '.'; }
+              50% { content: '..'; }
+              75% { content: '...'; }
+            }
+            .animated-ellipsis::after {
+              content: '';
+              animation: ellipsis 1.5s steps(1) infinite;
+            }
+          `}</style>
+          <div
+            className='w-full h-full flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,0,0,0.3)] relative overflow-hidden transition-all duration-300 ease-in-out'
+            style={{ background: 'radial-gradient(circle at center, rgba(99,102,241,0.04) 0%, #0F1117 70%)' }}
+          >
+            {/* Animated gradient loading bar */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gray-800/50 overflow-hidden rounded-t-2xl">
+              <div
+                className="h-full w-1/2 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"
+                style={{ animation: 'gradient-slide 2s ease-in-out infinite' }}
+              />
+            </div>
+
             {/* Concentric Scanner Animation */}
             <div className="relative flex items-center justify-center mb-8">
               <div className="absolute size-48 rounded-full border border-indigo-500/20 animate-pulse" style={{ animationDuration: '3s' }} />
               <div className="absolute size-36 rounded-full border border-indigo-500/30 animate-pulse" style={{ animationDuration: '2s' }} />
               <div className="absolute size-24 rounded-full border border-indigo-500/40 animate-pulse" style={{ animationDuration: '1.5s' }} />
-              <div className="size-16 bg-[#1A1D26] border border-gray-800 rounded-xl flex items-center justify-center relative z-10 shadow-xl">
+              <div
+                className="size-16 bg-[#1A1D26] border border-gray-800 rounded-xl flex items-center justify-center relative z-10 shadow-xl"
+                style={{ animation: 'icon-pulse 2.5s ease-in-out infinite' }}
+              >
                 <FullscreenIcon className='size-8 text-indigo-400' />
               </div>
             </div>
 
-            <h2 className='text-lg font-medium mb-2 text-gray-200'>Analyzing your request...</h2>
-            <p className='text-sm text-indigo-400/70 font-light'>This may take around 2-3 minutes...</p>
+            <h2 className='text-lg font-semibold mb-2 text-white tracking-wide animated-ellipsis'>Analyzing your request</h2>
+            <p className='text-sm text-indigo-400/50 font-light tracking-wide'>Usually takes 30–90 seconds.</p>
           </div>
         </main>
       </div>
