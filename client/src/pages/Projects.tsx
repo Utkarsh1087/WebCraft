@@ -6,6 +6,10 @@ import { Loader2Icon, Tablet, LaptopIcon, SmartphoneIcon, SaveIcon, FullscreenIc
 import { dummyConversations } from '../assets/assets.ts'
 import { dummyProjects } from '../assets/assets.ts'
 import Sidebar from '../components/Sidebar'
+import { dummyVersion } from '../assets/assets.ts'
+import ProjectPreview, { type ProjectPreviewRef } from '../components/ProjectPreview'
+
+
 
 const Projects = () => {
 
@@ -23,6 +27,9 @@ const Projects = () => {
   const [isSaved, setIsSaved] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(300)
   const isResizing = useRef(false)
+
+
+
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -48,12 +55,15 @@ const Projects = () => {
     window.addEventListener('mouseup', onMouseUp)
   }, [])
 
+
+  const previewRef = useRef<ProjectPreviewRef>(null)
+
   const fetchProject = async () => {
     setLoading(true)
     const project = dummyProjects.find(project => project.id === projectId)
     setTimeout(() => {
       if (project) {
-        setProject({ ...project, conversation: dummyConversations });
+        setProject({ ...project, conversation: dummyConversations, versions: dummyVersion });
         setLoading(false)
         setIsGenerating(project.current_code ? false : true)
       } else {
@@ -65,10 +75,28 @@ const Projects = () => {
   const saveProject = async () => {
 
   };
+//download code (index.html)
+const downloadCode = () => {
+  const code = previewRef.current?.getCode() || project?.current_code;
 
-  const downloadCode = () => {
+  if (!code) {
+    if (isGenerating) {
+      return;
+    }
+    return;
+  }
 
-  };
+  const element = document.createElement("a");
+  const file = new Blob([code], { type: "text/html" });
+
+  element.href = URL.createObjectURL(file);
+  element.download = "index.html";
+
+  document.body.appendChild(element);
+  element.click();
+
+};
+
 
   const togglePublish = async () => {
 
@@ -200,56 +228,7 @@ const Projects = () => {
         />
 
         {/* Preview Area */}
-        <main className='flex-1 min-w-0 bg-[#090A0D] rounded-2xl overflow-hidden relative border border-gray-800/50 h-full'>
-          <style>{`
-            @keyframes gradient-slide {
-              0% { transform: translateX(-100%); }
-              100% { transform: translateX(200%); }
-            }
-            @keyframes icon-pulse {
-              0%, 100% { transform: scale(1); opacity: 1; }
-              50% { transform: scale(1.08); opacity: 0.85; }
-            }
-            @keyframes ellipsis {
-              0% { content: ''; }
-              25% { content: '.'; }
-              50% { content: '..'; }
-              75% { content: '...'; }
-            }
-            .animated-ellipsis::after {
-              content: '';
-              animation: ellipsis 1.5s steps(1) infinite;
-            }
-          `}</style>
-          <div
-            className='w-full h-full flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,0,0,0.3)] relative overflow-hidden transition-all duration-300 ease-in-out'
-            style={{ background: 'radial-gradient(circle at center, rgba(99,102,241,0.04) 0%, #0F1117 70%)' }}
-          >
-            {/* Animated gradient loading bar */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gray-800/50 overflow-hidden rounded-t-2xl">
-              <div
-                className="h-full w-1/2 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"
-                style={{ animation: 'gradient-slide 2s ease-in-out infinite' }}
-              />
-            </div>
-
-            {/* Concentric Scanner Animation */}
-            <div className="relative flex items-center justify-center mb-8">
-              <div className="absolute size-48 rounded-full border border-indigo-500/20 animate-pulse" style={{ animationDuration: '3s' }} />
-              <div className="absolute size-36 rounded-full border border-indigo-500/30 animate-pulse" style={{ animationDuration: '2s' }} />
-              <div className="absolute size-24 rounded-full border border-indigo-500/40 animate-pulse" style={{ animationDuration: '1.5s' }} />
-              <div
-                className="size-16 bg-[#1A1D26] border border-gray-800 rounded-xl flex items-center justify-center relative z-10 shadow-xl"
-                style={{ animation: 'icon-pulse 2.5s ease-in-out infinite' }}
-              >
-                <FullscreenIcon className='size-8 text-indigo-400' />
-              </div>
-            </div>
-
-            <h2 className='text-lg font-semibold mb-2 text-white tracking-wide animated-ellipsis'>Analyzing your request</h2>
-            <p className='text-sm text-indigo-400/50 font-light tracking-wide'>Usually takes 30–90 seconds.</p>
-          </div>
-        </main>
+        <ProjectPreview ref={previewRef} project={project} isGenerating={isGenerating} device={device} showEditorPanel={true} />
       </div>
     </div>
   ) : (

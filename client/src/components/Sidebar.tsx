@@ -49,6 +49,16 @@ const Sidebar = ({ project, isMenuOpen, setProject, isGenerating, setIsGeneratin
         )
     }
 
+    const handleRevisions=async(e:React.FormEvent)=>{
+        e.preventDefault()
+       
+        setIsGenerating(true)
+        setTimeout(()=>{
+            setIsGenerating(false)
+        },3000)
+        
+    }
+
     return (
         <div
             style={{ width: isMenuOpen ? 0 : width }}
@@ -147,7 +157,7 @@ const Sidebar = ({ project, isMenuOpen, setProject, isGenerating, setIsGeneratin
 
             {/* Input area */}
             <div className="p-4 shrink-0">
-                <form className="relative flex items-center bg-[#1A1D26] border border-gray-800/50 rounded-2xl p-2 px-4 shadow-2xl transition-all duration-300 ease-in-out focus-within:border-indigo-500/50" onSubmit={(e) => e.preventDefault()}>
+                <form onSubmit={handleRevisions} className="relative flex items-center bg-[#1A1D26] border border-gray-800/50 rounded-2xl p-2 px-4 shadow-2xl transition-all duration-300 ease-in-out focus-within:border-indigo-500/50" >
                     <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}

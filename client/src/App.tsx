@@ -1,4 +1,3 @@
-import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Preview from './pages/Preview'
@@ -18,11 +17,11 @@ const App = () => {
           <Route path='/pricing' element={<Pricing />} />
           <Route path='/projects/:projectId' element={<Projects />} />
           <Route path='/projects' element={<MyProjects />} />
-          <Route path='/preview/:projectId' element={<Preview />} />
-          <Route path='/preview/ : projectId/ : versionId' element={<Preview />} />
           <Route path='/community' element={<Community />} />
-          <Route path='/view/:projectId' element={<View />} />
         </Route>
+        <Route path='/preview/:projectId' element={<Preview />} />
+        <Route path='/preview/:projectId/:versionId' element={<Preview />} />
+        <Route path='/view/:projectId' element={<View />} />
       </Routes>
     </div>
   )
