@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import { assets } from "../assets/assets";
 import { Link, useNavigate } from "react-router-dom";
+import { authClient } from "@/lib/auth-client";
+import {UserButton} from "@daveyplate/better-auth-ui"
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
 
+
+  const {data: session} = authClient.useSession()
   return (
     <>
       <style>
@@ -15,7 +19,7 @@ const Navbar = () => {
           * {
             font-family: "Poppins", sans-serif;
           }
-
+ 
           @keyframes rotate {
             100% {
               transform: rotate(1turn);
@@ -72,6 +76,7 @@ const Navbar = () => {
             </button>
 
             {/* Desktop Button */}
+           {!session?.user ?(
             <button onClick={() => navigate('/auth/signin')} className="bg-[#A6FF5D] hover:bg-[#A6FF5D]/90 text-gray-800 px-6 py-2.5 rounded-full text-sm transition cursor-pointer group">
               <div className="relative overflow-hidden">
                 <span className="block transition-transform duration-200 group-hover:-translate-y-full">
@@ -81,7 +86,9 @@ const Navbar = () => {
                   Get Started
                 </span>
               </div>
-            </button>
+            </button>):(
+<UserButton size="icon"/>
+            )}
           </div>
 
           {/* Open Button (Mobile Only) */}

@@ -7,10 +7,14 @@ import Pricing from './pages/Pricing'
 import View from './pages/View'
 import Community from './pages/Community'
 import Layout from './components/Layout'
+import { Toaster } from 'sonner'
+import AuthPage from './pages/auth/AuthPage'
+import Settings from './pages/Settings'
 
 const App = () => {
   return (
     <div>
+      <Toaster />
       <Routes>
         <Route element={<Layout />}>
           <Route path='/' element={<Home />} />
@@ -22,6 +26,8 @@ const App = () => {
         <Route path='/preview/:projectId' element={<Preview />} />
         <Route path='/preview/:projectId/:versionId' element={<Preview />} />
         <Route path='/view/:projectId' element={<View />} />
+        <Route path='/auth/:pathname' element={<AuthPage />} />
+        <Route path='/account/settings' element={<Settings />} />
       </Routes>
     </div>
   )
