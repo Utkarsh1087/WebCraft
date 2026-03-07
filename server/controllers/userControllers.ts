@@ -68,16 +68,20 @@ export const createUserProject = async (req: Request, res: Response) => {
       data: { credits: { decrement: 5 } },
     });
 
-    res.json({ projectId: project.id });
+    res.json({ project_id: project.id });
 
-    //enhance user prompt
-
-    const promptEnhanceResponse = await openai.chat.completions.create({
-      model: "z-ai/glm-4.5-air:free",
-      messages: [
-        {
-          role: "system",
-          content: `'You are a prompt enhancement specialist. Take the user's
+    // Background process for AI generation
+    (async () => {
+      try {
+        console.log("Starting AI enhancement for project:", project.id);
+        const promptEnhanceResponse = await openai.chat.completions.create({
+          model: "kwaipilot/kat-coder-pro",
+          max_tokens: 512,
+          max_completion_tokens: 512,
+          messages: [
+            {
+              role: "system",
+              content: `'You are a prompt enhancement specialist. Take the user's
 website request and expand it into a detailed, comprehensive
 prompt that will help create the best possible website.
 
@@ -92,38 +96,42 @@ typography)
 
 Return ONLY the enhanced prompt, nothing else. Make it detailed
 but concise (2-3 paragraphs max).`,
-        },
-        {
-          role: 'user',
-          content: initial_prompt
-        }
-      ],
-    });
+            },
+            {
+              role: 'user',
+              content: initial_prompt
+            }
+          ],
+        });
 
-    const enhancedPrompt = promptEnhanceResponse.choices[0].message.content;
+        const enhancedPrompt = promptEnhanceResponse.choices[0].message.content;
+        console.log("Prompt enhanced successfully");
 
-    await prisma.conversation.create({
-      data: {
-        role: 'assistant',
-        content: `I've enhanced your prompt to : "${enhancedPrompt}"`,
-        projectId: project.id
-      }
-    })
-    await prisma.conversation.create({
-      data: {
-        role: 'assistant',
-        content: 'now generating your website...',
-        projectId: project.id
-      }
-    })
+        await prisma.conversation.create({
+          data: {
+            role: 'assistant',
+            content: `I've enhanced your prompt to : "${enhancedPrompt}"`,
+            projectId: project.id
+          }
+        })
+        await prisma.conversation.create({
+          data: {
+            role: 'assistant',
+            content: 'now generating your website...',
+            projectId: project.id
+          }
+        })
 
-    //generate website code
-    const codeGenerationResponse = await openai.chat.completions.create({
-      model: 'z-ai/glm-4.5-air:free',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an expert web developer. Create a complete, production-ready, single-page website based on this request: "${enhancedPrompt}"
+        console.log("Starting code generation...");
+        //generate website code
+        const codeGenerationResponse = await openai.chat.completions.create({
+          model: 'kwaipilot/kat-coder-pro',
+          max_tokens: 2048,
+          max_completion_tokens: 2048,
+          messages: [
+            {
+              role: 'system',
+              content: `You are an expert web developer. Create a complete, production-ready, single-page website based on this request: "${enhancedPrompt}"
 
     CRITICAL REQUIREMENTS:
     - You MUST output valid HTML ONLY. 
@@ -149,50 +157,83 @@ but concise (2-3 paragraphs max).`,
     The HTML should be complete and ready to render as-is with Tailwind CSS.
 
 `
-        },
-        {
-          role: 'user',
-          content: enhancedPrompt || ''
+            },
+            {
+              role: 'user',
+              content: enhancedPrompt || ''
+            }
+          ]
+        })
+
+        const code = codeGenerationResponse.choices[0].message.content || '';
+        console.log("Code generated, length:", code.length);
+
+        if (!code) {
+          console.error("AI returned empty code");
+          await prisma.conversation.create({
+            data: {
+              role: 'assistant',
+              content: "Unable to generate the code, please try again",
+              projectId: project.id as string
+            }
+          })
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              credits: {
+                increment: 5
+              }
+            }
+          })
+          return
         }
-      ]
-    })
 
-    const code = codeGenerationResponse.choices[0].message.content || '';
+        const cleanedCode = code.replace(/```[a-z]*\n?/gi, '').replace(/```$/g, '').trim();
 
-    //create version for the project
+        //create version for the project
+        const version = await prisma.version.create({
+          data: {
+            code: cleanedCode,
+            description: 'Initial Version',
+            projectId: project.id
+          }
+        })
 
-    const version = await prisma.version.create({
-      data: {
-        code: code.replace(/```[a-z]*\n?/gi, '').replace(/```$/g, '')
-          .trim(),
-        description: 'Initial Version',
-        projectId: project.id
+        await prisma.websiteProject.update({
+          where: { id: project.id },
+          data: {
+            current_code: cleanedCode,
+            current_version_index: version.id
+          }
+        })
+
+        await prisma.conversation.create({
+          data: {
+            role: 'assistant',
+            content: "I've created your website! You can now preview it and request any changes.",
+            projectId: project.id
+          }
+        })
+        console.log("Project update complete for:", project.id);
+
+      } catch (aiError: any) {
+        console.error("AI Generation Error:", aiError.message);
+        await prisma.conversation.create({
+          data: {
+            role: 'assistant',
+            content: "AI generation failed: " + aiError.message,
+            projectId: project.id
+          }
+        })
+        await prisma.user.update({
+          where: { id: userId },
+          data: { credits: { increment: 5 } }
+        })
       }
-    })
-    await prisma.conversation.create({
-      data: {
-        role: 'assistant',
-        content: "I've created your website! You can now preview it and request any changes.",
-        projectId: project.id
-      }
-    })
-
-    await prisma.websiteProject.update({
-      where: { id: project.id },
-      data: {
-        current_code: code.replace(/```[a-z]*\n?/gi, '').replace(/```$/g, '')
-          .trim(),
-        current_version_index: version.id
-      }
-    })
-
+    })();
 
   } catch (error: any) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { credits: { increment: 5 } }
-    })
-    console.log(error);
+    console.log("Controller Error:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -201,7 +242,7 @@ but concise (2-3 paragraphs max).`,
 
 //controller function to get a single user project
 
-export const getUserProject = async (req: Request<{projectId:string}>, res: Response) => {
+export const getUserProject = async (req: Request<{ projectId: string }>, res: Response) => {
   try {
     const userId = req.userId;
     if (!userId) {
@@ -209,9 +250,10 @@ export const getUserProject = async (req: Request<{projectId:string}>, res: Resp
     }
 
     const { projectId } = req.params;
+    console.log("Fetching project for ID:", projectId, "and UserID:", userId);
 
-    const project = await prisma.websiteProject.findUnique({
-      where: { id: projectId, userId },
+    const project = await prisma.websiteProject.findFirst({
+      where: { id: projectId as string, userId: userId as string },
       include: {
         conversation: {
           orderBy: { timestamp: 'asc' }
@@ -220,12 +262,11 @@ export const getUserProject = async (req: Request<{projectId:string}>, res: Resp
       }
     });
 
-
-    res.json(project);
-
+    console.log("Project found:", project ? "yes" : "no");
+    res.json({ project });
 
   } catch (error: any) {
-    console.log(error.code || error.message);
+    console.log("Error in getUserProject:", error.code || error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -245,7 +286,7 @@ export const getUserProjects = async (req: Request, res: Response) => {
     });
 
 
-    res.json(projects);
+    res.json({ projects });
 
 
   } catch (error: any) {
@@ -256,29 +297,29 @@ export const getUserProjects = async (req: Request, res: Response) => {
 
 //controller function to toggle project publish
 
-export const togglePublish = async (req: Request<{projectId: string}>, res: Response) => {
+export const togglePublish = async (req: Request<{ projectId: string }>, res: Response) => {
   try {
     const userId = req.userId;
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized user" });
     }
 
-  const {projectId} = req.params;
+    const { projectId } = req.params;
 
-const project = await prisma.websiteProject.findUnique({
-  where: {id:projectId, userId}
-})
+    const project = await prisma.websiteProject.findFirst({
+      where: { id: projectId as string, userId: userId as string }
+    })
 
-if(!project){
-  return res.status(404).json({message:"Project not found"})
-}
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" })
+    }
 
-await prisma.websiteProject.update({
-  where: {id:projectId, userId},
-  data: {isPublished: !project.isPublished}
-})
+    await prisma.websiteProject.update({
+      where: { id: projectId as string },
+      data: { isPublished: !project.isPublished }
+    })
 
-    res.json({message:project.isPublished ? 'Project Unpublished' : 'Project Published Successfully'});
+    res.json({ message: project.isPublished ? 'Project Unpublished' : 'Project Published Successfully' });
 
 
   } catch (error: any) {
@@ -289,11 +330,11 @@ await prisma.websiteProject.update({
 
 //controller function to purchase credits
 
-export const purchaseCredits = async(req:Request,res: Response)=>{
+export const purchaseCredits = async (req: Request, res: Response) => {
   try {
-    
-  } catch (error:any) {
-    
+
+  } catch (error: any) {
+
   }
 }
 

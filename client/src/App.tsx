@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import Preview from './pages/Preview'
 import MyProjects from './pages/MyProjects'
@@ -10,6 +10,12 @@ import Layout from './components/Layout'
 import { Toaster } from 'sonner'
 import AuthPage from './pages/auth/AuthPage'
 import Settings from './pages/Settings'
+import { useParams } from 'react-router-dom'
+
+const ProjectRedirect = () => {
+  const { projectId } = useParams();
+  return <Navigate to={`/projects/${projectId}`} replace />;
+};
 
 const App = () => {
   return (
@@ -20,6 +26,7 @@ const App = () => {
           <Route path='/' element={<Home />} />
           <Route path='/pricing' element={<Pricing />} />
           <Route path='/projects/:projectId' element={<Projects />} />
+          <Route path='/project/:projectId' element={<ProjectRedirect />} />
           <Route path='/projects' element={<MyProjects />} />
           <Route path='/community' element={<Community />} />
         </Route>

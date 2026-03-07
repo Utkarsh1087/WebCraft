@@ -54,7 +54,9 @@ export const makeRevision = async (req: Request, res: Response) => {
 
         //Enhance user Prompt
         const promptEnhanceResponse = await openai.chat.completions.create({
-            model: 'z-ai/glm-4.5-air:free',
+            model: 'kwaipilot/kat-coder-pro',
+            max_tokens: 512,
+            max_completion_tokens: 512,
             messages: [
                 {
                     role: 'system',
@@ -94,7 +96,9 @@ Return ONLY the enhanced request, nothing else. Keep it concise
         //Generate website code
 
         const codeGenerationResponse = await openai.chat.completions.create({
-            model: 'z-ai/glm-4.5-air:free',
+            model: 'kwaipilot/kat-coder-pro',
+            max_tokens: 2048,
+            max_completion_tokens: 2048,
             messages: [
                 {
                     role: 'system',
@@ -122,6 +126,27 @@ Apply the reguested changes while maintaining the Tailwind CsS styling approach.
         })
 
         const code = codeGenerationResponse.choices[0].message.content || '';
+
+        if (!code) {
+            await prisma.conversation.create({
+                data: {
+                    role: 'assistant',
+                    content: "Unable to generate the code, please try again",
+                    projectId: projectId as string
+                }
+            })
+            await prisma.user.update({
+                where: { id: userId },
+                data: {
+                    credits: {
+                        increment: 5
+                    }
+                }
+            })
+
+            return
+        }
+
 
         const version = await prisma.version.create({
             data: {
@@ -226,9 +251,8 @@ export const deleteProject = async (req: Request, res: Response) => {
         const { projectId } = req.params;
 
 
-        await prisma.websiteProject.delete({
+        await prisma.websiteProject.deleteMany({
             where: { id: projectId as string, userId: userId as string },
-
         })
 
 

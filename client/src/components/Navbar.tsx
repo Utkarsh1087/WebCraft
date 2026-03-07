@@ -3,13 +3,34 @@ import { assets } from "../assets/assets";
 import { Link, useNavigate } from "react-router-dom";
 import { authClient } from "@/lib/auth-client";
 import {UserButton} from "@daveyplate/better-auth-ui"
+import api from "@/configs/axios";
+import { toast } from "sonner";
+import { useEffect } from "react";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
-
+const [credits, setCredits] = useState(0)
 
   const {data: session} = authClient.useSession()
+
+const getCredits = async () =>{
+  try {
+    const {data} = await api.get('/api/user/credits')
+    setCredits(data.credits)
+  } catch (error:any) {
+    toast.error(error.response.data.message)
+    console.log(error)
+  }
+}
+
+
+useEffect(() => {
+ if(session?.user){
+  getCredits()
+ }
+}, [session?.user])
+
   return (
     <>
       <style>
@@ -87,7 +108,11 @@ const Navbar = () => {
                 </span>
               </div>
             </button>):(
+<>
+<button className="flex items-center gap-2" onClick={() => navigate('/pricing')}>Credits: <span className="text-[#A6FF5D]">{credits}</span></button>
 <UserButton size="icon"/>
+</>
+
             )}
           </div>
 

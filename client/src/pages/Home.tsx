@@ -1,19 +1,38 @@
 import React, { useState } from 'react'
 import GlassButton from "../components/GlassButton";
 import { Loader } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import api from '@/configs/axios';
 
 const Home = () => {
+
+  const { data: session } = authClient.useSession()
+  const navigate = useNavigate()
+
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = useState(false);
 
   const onSubmitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    //Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-    }, 3000);
 
+    try {
+      if (!session?.user) {
+        return toast.error("Please login to create a project")
+      } else if (!input.trim()) {
+        return toast.error("Please enter a project description")
+      }
+      setLoading(true)
+      const { data } = await api.post('/api/user/project', { initial_prompt: input });
+      setLoading(false)
+      navigate(`/projects/${data.project_id}`)
+
+    } catch (error: any) {
+      setLoading(false)
+      toast.error(error?.response?.data?.message || error.message);
+      console.log(error)
+    }
 
   }
 

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { dummyProjects } from '../assets/assets'
 import type { Project } from '../types'
 import ProjectPreview from '../components/ProjectPreview'
 import { Loader2Icon } from 'lucide-react'
+import api from '@/configs/axios'
+import { toast } from 'sonner'
 
 const Preview = () => {
   const { projectId } = useParams();
@@ -12,19 +13,25 @@ const Preview = () => {
 
   const fetchProject = async () => {
     setLoading(true);
-    // In a real app, we'd fetch from API. Here we use dummyProjects.
-    const foundProject = dummyProjects.find(p => p.id === projectId);
-
-    setTimeout(() => {
-      if (foundProject) {
-        setProject(foundProject as Project);
+    try {
+      const { data } = await api.get(`/api/user/project/${projectId}`)
+      if (data.project) {
+        setProject(data.project)
+      } else {
+        toast.error("Project not found")
       }
-      setLoading(false);
-    }, 1000);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to fetch project")
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
   };
 
   useEffect(() => {
-    fetchProject();
+    if (projectId) {
+      fetchProject();
+    }
   }, [projectId]);
 
   if (loading) {

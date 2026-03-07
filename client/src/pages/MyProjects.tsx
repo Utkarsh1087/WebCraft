@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import type { Project } from '../types/index.ts';
-import { Loader2Icon } from 'lucide-react';
-import { PlusIcon } from 'lucide-react';
+import { Loader2Icon, PlusIcon, TrashIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { dummyProjects } from '../assets/assets.ts';
-import { TrashIcon } from 'lucide-react';
-
+import api from '@/configs/axios';
+import { toast } from 'sonner';
 
 const MyProjects = () => {
   const navigate = useNavigate()
@@ -13,19 +11,27 @@ const MyProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
 
   const fetchProjects = async () => {
-
-    setProjects(dummyProjects)
-
-    //simulate loading 
-    setTimeout(() => {
+    try {
+      setLoading(true)
+      const { data } = await api.get('/api/user/project')
+      setProjects(data.projects)
       setLoading(false)
-    }, 1000)
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message)
+      setLoading(false)
+    }
   };
 
   const deleteProject = async (projectId: string) => {
-
+    try {
+      if (!window.confirm("Are you sure you want to delete this project?")) return;
+      await api.delete(`/api/project/${projectId}`)
+      toast.success("Project deleted successfully")
+      fetchProjects()
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message)
+    }
   }
-
 
   useEffect(() => {
     fetchProjects();
@@ -105,7 +111,7 @@ const MyProjects = () => {
                       {new Date(project.createdAt).toLocaleDateString()}
                     </span>
 
-                    <div className="flex <div key={project.id}> gap-2">
+                    <div className="flex gap-2">
                       <button
                         className='px-3 py-1 text-xs border border-gray-700 rounded-md text-gray-300 hover:text-white hover:border-gray-600 transition-colors'
                         onClick={() => navigate(`/preview/${project.id}`)}
@@ -183,6 +189,5 @@ const MyProjects = () => {
     </div>
   )
 }
-
 
 export default MyProjects;

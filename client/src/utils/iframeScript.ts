@@ -1,11 +1,12 @@
 
 const iframeScript = `
-<script>
+<script id="ai-preview-script">
   let selectedElement = null;
   let hoverElement = null;
 
   // Add styles for selection and hover
   const style = document.createElement('style');
+  style.id = 'ai-preview-style';
   style.textContent = '.webcraft-hover { outline: 2px dashed #6366f1 !important; outline-offset: -2px !important; cursor: pointer !important; } .webcraft-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px !important; }';
   document.head.appendChild(style);
 
@@ -25,21 +26,23 @@ const iframeScript = `
     };
   }
 
+  // Use capture phase (true) to intercept events before they reach element-level listeners
   document.addEventListener('mouseover', (e) => {
     if (e.target === document.body || e.target === document.documentElement) return;
     if (hoverElement) hoverElement.classList.remove('webcraft-hover');
     hoverElement = e.target;
     hoverElement.classList.add('webcraft-hover');
-  });
+  }, true);
 
   document.addEventListener('mouseout', (e) => {
     if (hoverElement) {
       hoverElement.classList.remove('webcraft-hover');
       hoverElement = null;
     }
-  });
+  }, true);
 
   document.addEventListener('click', (e) => {
+    // Prevent default and stop propagation immediately in capture phase
     e.preventDefault();
     e.stopPropagation();
 
@@ -51,7 +54,13 @@ const iframeScript = `
       type: 'ELEMENT_SELECTED',
       payload: getElementData(selectedElement)
     }, '*');
-  });
+  }, true);
+
+  // Prevent form submissions
+  document.addEventListener('submit', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
 
   window.addEventListener('message', (event) => {
     if (event.data.type === 'UPDATE_ELEMENT' && selectedElement) {
