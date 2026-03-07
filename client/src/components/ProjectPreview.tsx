@@ -84,10 +84,17 @@ const ProjectPreview = forwardRef<ProjectPreviewRef, ProjectPreviewProps>(({ pro
     const injectPreview = (html: string) => {
         if (!html) return '';
 
-        if (html.includes('</body>')) {
-            return html.replace('</body>', iframeScript + '</body>')
+        // Safely inject script before closing body, or at the end if body is missing
+        // In some cases, appending to the end can cause the script to be rendered as text 
+        // if there's an unclosed tag like <pre> or <textarea>.
+        // We ensure it's wrapped in a clean environment.
+        const scriptTag = `\n${iframeScript}\n`;
+
+        if (html.includes('<body')) {
+            // Inject as the first child of body to avoid being trapped in unclosed tags at the bottom
+            return html.replace(/(<body[^>]*>)/i, `$1${scriptTag}`);
         } else {
-            return html + iframeScript;
+            return scriptTag + html;
         }
     }
 
