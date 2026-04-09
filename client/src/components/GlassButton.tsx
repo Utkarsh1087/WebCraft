@@ -1,5 +1,5 @@
 import React from "react";
-import "./GlassButton.css";
+import "./glassButton.css";
 
 interface GlassButtonProps {
     text: string;
