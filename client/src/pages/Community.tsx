@@ -3,7 +3,7 @@ import type { Project } from '../types/index.ts';
 import { Loader2Icon } from 'lucide-react';
 import { PlusIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { dummyProjects } from '../assets/assets.ts';
+import { dummyProjects } from '../assets/assets';
 import { TrashIcon } from 'lucide-react';
 
 

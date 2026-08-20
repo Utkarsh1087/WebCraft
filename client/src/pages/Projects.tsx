@@ -1,6 +1,6 @@
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useState, useRef, useCallback, useEffect } from 'react'
-import type { Project } from '../types/index.ts'
+import type { Project } from '../types/index'
 import { Loader2Icon, Tablet, LaptopIcon, SmartphoneIcon, SaveIcon, FullscreenIcon, ArrowBigDownDashIcon, EyeIcon, PanelLeft, PanelLeftClose, ChevronLeft } from 'lucide-react'
 import api from '@/configs/axios'
 import Sidebar from '../components/Sidebar'
@@ -8,7 +8,7 @@ import ProjectPreview, { type ProjectPreviewRef } from '../components/ProjectPre
 import { authClient } from '@/lib/auth-client'
 import { UserButton } from '@daveyplate/better-auth-ui'
 import { toast } from 'sonner'
-import { assets } from '../assets/assets.ts'
+import { assets } from '../assets/assets'
 
 const Projects = () => {
   const { projectId } = useParams()

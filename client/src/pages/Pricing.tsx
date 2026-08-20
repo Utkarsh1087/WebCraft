@@ -1,5 +1,5 @@
 import React from 'react'
-import { appPlans } from '../assets/assets.ts';
+import { appPlans } from '../assets/assets';
 
 
 interface Plan {
