@@ -8,7 +8,7 @@ const iframeScript = `
     // Add styles for selection and hover
     const style = document.createElement('style');
     style.id = 'ai-preview-style';
-    style.textContent = '.webcraft-hover { outline: 2px dashed #6366f1 !important; outline-offset: -2px !important; cursor: pointer !important; } .webcraft-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px !important; }';
+    style.textContent = '.webcraft-hover { outline: 2px dashed #6366f1 !important; outline-offset: -2px !important; cursor: pointer !important; } .webcraft-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px !important; } ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: #0b0f19; } ::-webkit-scrollbar-thumb { background: #374151; border-radius: 9999px; } ::-webkit-scrollbar-thumb:hover { background: #4b5563; }';
     document.head.appendChild(style);
 
     function getElementData(el) {

@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # WebCraft Backend Service
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: webcraft_api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://webcraft_user:webcraft_secure_pass@postgres:5432/webcraft_db?sslmode=disable
+      - BETTER_AUTH_SECRET=super_secure_production_secret_key_32_chars
+      - BETTER_AUTH_URL=http://localhost:3000
+      - TRUSTED_ORIGIN=http://localhost:5173
+      - AI_API_KEY=${AI_API_KEY:-""}
+      - DB_POOL_MAX=20
+      - RATE_LIMIT_GLOBAL_MAX=300
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # Local PostgreSQL Database Service (for self-contained local deployment)
+  postgres:
+    image: postgres:16-alpine
+    container_name: webcraft_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: webcraft_user
+      POSTGRES_PASSWORD: webcraft_secure_pass
+      POSTGRES_DB: webcraft_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webcraft_user -d webcraft_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+volumes:
+  postgres_data:
+    driver: local

@@ -29,6 +29,7 @@ model User {
   accounts      Account[]
   transactions Transaction[]
 
+  @@index([email])
   @@map("user")
 }
 
@@ -48,6 +49,11 @@ model WebsiteProject {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isPublished])
+  @@index([isPublished, updatedAt(sort: Desc)])
+  @@index([userId, updatedAt(sort: Desc)])
 }
 
 enum Role {
@@ -64,6 +70,9 @@ model Conversation {
 
   // Relations
   project WebsiteProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, timestamp(sort: Asc)])
 }
 
 model Version {
@@ -75,6 +84,9 @@ model Version {
 
   // Relations
   project WebsiteProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, timestamp(sort: Asc)])
 }
 
 model Transaction {
@@ -89,6 +101,8 @@ model Transaction {
 
   // Relations
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Session {
@@ -138,3 +152,4 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+

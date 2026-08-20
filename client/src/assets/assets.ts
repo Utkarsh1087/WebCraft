@@ -1,7 +1,7 @@
-import logo from './logo.svg';
+import webcraft from './webcraft.svg'
 
 export const assets = {
-    logo,
+    webcraft
 };
 
 export const appPlans = [

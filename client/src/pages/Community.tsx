@@ -45,18 +45,13 @@ const Community = () => {
           {/* Render your projects list here */}
 
 
-          <div className="flex flex-wrap gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
             {projects.map((project) => (
               <Link
                 to={`/view/${project.id}`}
                 target='_blank'
                 key={project.id}
-                className=' w-72 max-sm:mx-auto cursor-pointer 
-                    bg-gray-900/60 border border-gray-700 rounded-lg 
-                    overflow-hidden group
-                     
-                    hover:border-indigo-600/80 hover:-translate-y-1
-                    transition-all duration-300 ease-out'
+                className="w-full max-w-sm sm:w-72 group relative bg-[#1A1D26] rounded-2xl overflow-hidden border border-gray-800/50 hover:border-indigo-500/50 transition-all duration-500 cursor-pointer hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
               >
 
                 {/*Desktop like mini preview */}

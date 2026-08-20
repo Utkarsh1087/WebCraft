@@ -1,23 +1,23 @@
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import type { Project } from '../types/index.ts'
-import { useEffect } from 'react'
-import { Loader2Icon, Tablet, LaptopIcon, SmartphoneIcon, SaveIcon, FullscreenIcon, ArrowBigDownDashIcon, EyeIcon } from 'lucide-react'
+import { Loader2Icon, Tablet, LaptopIcon, SmartphoneIcon, SaveIcon, FullscreenIcon, ArrowBigDownDashIcon, EyeIcon, PanelLeft, PanelLeftClose, ChevronLeft } from 'lucide-react'
 import api from '@/configs/axios'
 import Sidebar from '../components/Sidebar'
 import ProjectPreview, { type ProjectPreviewRef } from '../components/ProjectPreview'
 import { authClient } from '@/lib/auth-client'
+import { UserButton } from '@daveyplate/better-auth-ui'
 import { toast } from 'sonner'
-
+import { assets } from '../assets/assets.ts'
 
 const Projects = () => {
-
   const { projectId } = useParams()
   const navigate = useNavigate()
   const { data: session, isPending } = authClient.useSession()
 
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
+  const [credits, setCredits] = useState<number>(0)
 
   const [isGenerating, setIsGenerating] = useState(true)
   const [device, setDevice] = useState<'phone' | 'tablet' | 'desktop'>('desktop')
@@ -25,11 +25,17 @@ const Projects = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isSaved, setIsSaved] = useState(true)
-  const [sidebarWidth, setSidebarWidth] = useState(300)
+  const [sidebarWidth, setSidebarWidth] = useState(320)
   const isResizing = useRef(false)
 
-
-
+  const fetchCredits = async () => {
+    try {
+      const { data } = await api.get('/api/user/credits');
+      setCredits(data.credits);
+    } catch {
+      // Ignore
+    }
+  };
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -39,7 +45,7 @@ const Projects = () => {
 
     const onMouseMove = (e: MouseEvent) => {
       if (!isResizing.current) return
-      const newWidth = Math.min(Math.max(e.clientX, 200), 600)
+      const newWidth = Math.min(Math.max(e.clientX, 220), 550)
       setSidebarWidth(newWidth)
     }
 
@@ -55,112 +61,143 @@ const Projects = () => {
     window.addEventListener('mouseup', onMouseUp)
   }, [])
 
-
   const previewRef = useRef<ProjectPreviewRef>(null)
 
   const fetchProject = async () => {
-    console.log("Client fetching project:", projectId);
     try {
       const { data } = await api.get(`/api/user/project/${projectId}`)
-      console.log("API response data:", data);
       if (data.project) {
         setProject(data.project)
-        setIsGenerating(data.project.current_code ? false : true)
+        const hasFailedMessage = data.project.conversation?.some((c: any) => c.role === 'assistant' && c.content?.toLowerCase().includes('failed'));
+        setIsGenerating(!data.project.current_code && !hasFailedMessage)
       } else {
         toast.error("Project not found")
       }
       setLoading(false)
     } catch (error: any) {
       toast.error(error?.response?.data?.message || error.message)
-      console.log(error)
+      setLoading(false)
     }
   }
 
   const saveProject = async () => {
+    const code = previewRef.current?.getCode() || project?.current_code;
+    if (!code || !projectId) return;
 
+    try {
+      setIsSaving(true);
+      await api.put(`/api/project/save/${projectId}`, { code });
+      setIsSaved(true);
+      toast.success("Project saved successfully");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message);
+    } finally {
+      setIsSaving(false);
+    }
   };
-  //download code (index.html)
+
   const downloadCode = () => {
     const code = previewRef.current?.getCode() || project?.current_code;
-
     if (!code) {
-      if (isGenerating) {
-        return;
-      }
-      return;
+      return toast.error("No code available to download yet");
     }
 
     const element = document.createElement("a");
     const file = new Blob([code], { type: "text/html" });
-
     element.href = URL.createObjectURL(file);
-    element.download = "index.html";
-
+    element.download = `${project?.name ? project.name.slice(0, 20).replace(/[^a-zA-Z0-9]/g, '_') : 'website'}.html`;
     document.body.appendChild(element);
     element.click();
-
+    document.body.removeChild(element);
   };
-
 
   const togglePublish = async () => {
-
+    if (!projectId) return;
+    try {
+      const { data } = await api.post(`/api/user/project/publish/${projectId}`);
+      toast.success(data.message || (data.isPublished ? "Project Published Successfully" : "Project Unpublished"));
+      if (project) {
+        setProject({ ...project, isPublished: data.isPublished });
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message);
+    }
   };
-
 
   useEffect(() => {
     if (session?.user) {
       fetchProject();
-
+      fetchCredits();
     } else if (!isPending && !session?.user) {
       navigate("/")
       toast("Please login to view your projects")
     }
   }, [session?.user])
 
-
   useEffect(() => {
     if (project && !project.current_code) {
-      const intervalId = setInterval(fetchProject, 10000);
+      const intervalId = setInterval(fetchProject, 8000);
       return () => clearInterval(intervalId);
     }
   }, [project]);
 
   if (loading) {
     return (
-      <div className='bg-black h-screen flex items-center justify-center'>
-        <Loader2Icon className='size-7 animate-spin text-violet-200' />
+      <div className='bg-[#0B0F19] h-screen flex flex-col items-center justify-center gap-3 text-white'>
+        <Loader2Icon className='size-8 animate-spin text-indigo-400' />
+        <p className='text-sm text-gray-400'>Loading your workspace...</p>
       </div>
     );
   }
 
   return project ? (
-    <div className='flex flex-col h-screen w-full text-white bg-black overflow-hidden'>
+    <div className='flex flex-col h-screen w-screen text-white bg-[#0B0F19] overflow-hidden'>
 
-      {/* Top Bar */}
-      <header className='flex items-center justify-between px-6 h-16 border-b border-gray-800 bg-[#0F1117] shrink-0'>
-        {/* Left Section: Logo & Project Info */}
-        <div className='flex items-center gap-4 flex-1 min-w-0'>
-          <div className='bg-white rounded-full p-1 leading-none shrink-0 cursor-pointer active:scale-95 hover:brightness-110 transition-all duration-300 ease-in-out' onClick={() => navigate('/')}>
-            <img src="/favicon.svg" alt="logo" className='size-5' />
-          </div>
-          <div className='flex flex-col min-w-0'>
-            <p className='text-sm font-bold truncate leading-tight tracking-wide text-white'>
+      {/* Modern Studio Top Bar */}
+      <header className='flex items-center justify-between px-4 sm:px-6 h-16 border-b border-gray-800/80 bg-[#0F131F] shrink-0 z-30'>
+        {/* Left Section: Back, Logo & Project Title */}
+        <div className='flex items-center gap-3 min-w-0 flex-1 sm:flex-initial'>
+          <button
+            onClick={() => navigate('/projects')}
+            className='p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition'
+            title="Back to My Projects"
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          {/* Sidebar Toggle (Mobile Only) */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className='lg:hidden p-1.5 bg-[#1A1D26] hover:bg-[#252A35] text-gray-400 hover:text-white rounded-lg border border-gray-800'
+            title={isMenuOpen ? "Show Sidebar" : "Hide Sidebar"}
+          >
+            {isMenuOpen ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
+          </button>
+
+          <Link to="/" className='flex items-center hover:opacity-90 transition shrink-0' title="Home">
+            <img src={assets.webcraft} alt="WebCraft" className="h-5 md:h-5" />
+          </Link>
+
+          <div className='h-4 w-px bg-gray-800 hidden sm:block' />
+
+          <div className='flex flex-col min-w-0 max-w-[180px] sm:max-w-xs'>
+            <p className='text-xs sm:text-sm font-semibold truncate leading-tight text-gray-100'>
               {project.name}
             </p>
-            <p className='text-[10px] text-gray-600 truncate font-light'>
-              Previewing last saved version
-            </p>
+            <span className='text-[10px] text-gray-500 truncate'>
+              {project.isPublished ? '● Published' : '○ Private Draft'}
+            </span>
           </div>
         </div>
 
         {/* Middle Section: Device Toggles */}
-        <div className='flex items-center gap-1 bg-[#1A1D26] p-1 rounded-xl border border-gray-800/50'>
+        <div className='hidden md:flex items-center gap-1 bg-[#161B26] p-1 rounded-xl border border-gray-800'>
           <button
             onClick={() => setDevice('phone')}
             title="Mobile Preview"
-            className={`p-1.5 rounded-lg transition-all duration-300 ease-in-out cursor-pointer active:scale-95 ${device === 'phone'
-              ? "bg-white/10 text-white scale-105 border border-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.3)]"
-              : "text-gray-500 border border-transparent hover:text-white hover:-translate-y-0.5 hover:shadow-md"
+            className={`p-1.5 rounded-lg transition-all ${device === 'phone'
+              ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+              : "text-gray-400 hover:text-white"
               }`}
           >
             <SmartphoneIcon size={16} />
@@ -168,9 +205,9 @@ const Projects = () => {
           <button
             onClick={() => setDevice('tablet')}
             title="Tablet Preview"
-            className={`p-1.5 rounded-lg transition-all duration-300 ease-in-out cursor-pointer active:scale-95 ${device === 'tablet'
-              ? "bg-white/10 text-white scale-105 border border-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.3)]"
-              : "text-gray-400 border border-transparent hover:text-white hover:-translate-y-0.5 hover:shadow-md"
+            className={`p-1.5 rounded-lg transition-all ${device === 'tablet'
+              ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+              : "text-gray-400 hover:text-white"
               }`}
           >
             <Tablet size={16} />
@@ -178,60 +215,95 @@ const Projects = () => {
           <button
             onClick={() => setDevice('desktop')}
             title="Desktop Preview"
-            className={`p-1.5 rounded-lg transition-all duration-300 ease-in-out cursor-pointer active:scale-95 ${device === 'desktop'
-              ? "bg-white/10 text-white scale-105 border border-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.3)]"
-              : "text-gray-400 border border-transparent hover:text-white hover:-translate-y-0.5 hover:shadow-md"
+            className={`p-1.5 rounded-lg transition-all ${device === 'desktop'
+              ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+              : "text-gray-400 hover:text-white"
               }`}
           >
             <LaptopIcon size={16} />
           </button>
         </div>
 
-        {/* Right Section: Action Buttons */}
-        <div className='flex items-center gap-3 flex-1 justify-end'>
+        {/* Right Section: Actions & User Info */}
+        <div className='flex items-center gap-2 sm:gap-3 shrink-0'>
+          {/* Credits Badge */}
+          <Link
+            to="/pricing"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300 hover:border-[#A6FF5D]/50 transition"
+          >
+            <span>Credits:</span>
+            <span className="font-bold text-[#A6FF5D]">{credits}</span>
+          </Link>
+
+          {/* Save Button */}
           <button
             onClick={saveProject}
             disabled={isSaving}
-            className='flex items-center gap-2 px-4 py-1.5 text-xs font-semibold bg-[#1A1D26] hover:bg-[#252A35] hover:brightness-110 border border-gray-800 rounded-xl transition-all duration-300 ease-in-out active:scale-95 text-gray-400 opacity-80 hover:opacity-100 hover:-translate-y-0.5 hover:shadow-md cursor-pointer'
+            className='flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#161B26] hover:bg-[#202737] border border-gray-800 rounded-xl transition text-gray-200 cursor-pointer active:scale-95'
           >
             <SaveIcon size={14} />
-            <span>Save</span>
-            <span className={`ml-1 size-2 rounded-full ${isSaved ? 'bg-green-400 shadow-[0_0_4px_rgba(74,222,128,0.5)]' : 'bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.5)]'}`} title={isSaved ? 'Saved' : 'Unsaved changes'} />
+            <span className='hidden sm:inline'>Save</span>
+            <span className={`size-2 rounded-full ${isSaved ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]' : 'bg-amber-400'}`} />
           </button>
 
+          {/* Fullscreen Preview */}
           <Link
             target='_blank'
             to={`/preview/${projectId}`}
-            className='flex items-center gap-2 px-4 py-1.5 text-xs font-semibold bg-[#1A1D26] hover:bg-[#252A35] hover:brightness-110 border border-gray-800 rounded-xl transition-all duration-300 ease-in-out active:scale-95 text-gray-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer'
+            className='flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#161B26] hover:bg-[#202737] border border-gray-800 rounded-xl transition text-gray-300'
           >
             <FullscreenIcon size={14} />
-            <span>Preview</span>
+            <span className='hidden sm:inline'>Preview</span>
           </Link>
 
+          {/* Download */}
           <button
             onClick={downloadCode}
-            className='flex items-center gap-2 px-5 py-1.5 text-xs font-bold bg-[#2563EB] hover:bg-blue-500 hover:brightness-110 rounded-xl transition-all duration-300 ease-in-out active:scale-95 text-white shadow-lg shadow-blue-500/25 hover:-translate-y-0.5 hover:shadow-blue-500/40 cursor-pointer'
+            className='hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 rounded-xl transition text-white shadow-md shadow-indigo-600/20 active:scale-95 cursor-pointer'
           >
             <ArrowBigDownDashIcon size={14} />
             <span>Download</span>
           </button>
 
+          {/* Publish Toggle */}
           <button
             onClick={togglePublish}
-            className='flex items-center gap-2 px-5 py-1.5 text-xs font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 hover:brightness-110 rounded-xl transition-all duration-300 ease-in-out active:scale-95 text-white shadow-lg shadow-indigo-500/30 hover:-translate-y-0.5 hover:shadow-indigo-500/50 cursor-pointer'
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 text-xs font-bold rounded-xl transition active:scale-95 cursor-pointer ${project.isPublished
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
+              : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90 shadow-md shadow-indigo-500/20'
+              }`}
           >
             <EyeIcon size={14} />
-            <span>Publish</span>
+            <span>{project.isPublished ? 'Published' : 'Publish'}</span>
           </button>
+
+          <div className="pl-1">
+            <UserButton size="sm" />
+          </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <div className='flex flex-1 min-h-0 overflow-hidden flex-col lg:flex-row gap-6 p-6 pt-0 mt-6 mb-20 items-stretch'>
-        {/* Chat Section Wrapper */}
-        <div className='h-full rounded-2xl overflow-hidden border border-gray-800/50 bg-[#0F1117] shadow-xl relative'>
+      {/* Main Workspace Content Area */}
+      <div className='flex flex-1 min-h-0 overflow-hidden flex-col lg:flex-row gap-3 lg:gap-4 p-3 lg:p-4 items-stretch'>
+        {/* Chat Section Wrapper & Backdrop */}
+        {!isMenuOpen && (
+          <div
+            onClick={() => setIsMenuOpen(true)}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[45] lg:hidden animate-in fade-in duration-200"
+          />
+        )}
+
+        <div className={`
+          h-full overflow-hidden bg-[#0F131F] shadow-2xl relative
+          lg:relative lg:rounded-2xl lg:block lg:border lg:border-gray-800/80
+          ${!isMenuOpen 
+            ? "max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:w-[88vw] max-lg:max-w-[400px] max-lg:z-50 max-lg:rounded-r-3xl max-lg:border-r max-lg:border-gray-800 animate-in slide-in-from-left duration-300 ease-out" 
+            : "max-lg:hidden"
+          }
+        `}>
           <Sidebar
             isMenuOpen={isMenuOpen}
+            setIsMenuOpen={setIsMenuOpen}
             project={project}
             setProject={setProject}
             isGenerating={isGenerating}
@@ -240,22 +312,30 @@ const Projects = () => {
           />
         </div>
 
-        {/* Resize Handle */}
+        {/* Drag Resize Handle (Desktop Only) */}
         <div
           onMouseDown={handleMouseDown}
-          className='w-1 hover:w-1.5 bg-gray-800 hover:bg-indigo-500/50 cursor-col-resize transition-all duration-300 ease-in-out shrink-0 active:bg-indigo-500'
+          className='hidden lg:block w-1 hover:w-1.5 bg-gray-800 hover:bg-indigo-500 cursor-col-resize transition-all shrink-0 active:bg-indigo-500'
         />
 
-        {/* Preview Area */}
-        <ProjectPreview ref={previewRef} project={project} isGenerating={isGenerating} device={device} showEditorPanel={true} />
+        {/* Live Preview Canvas */}
+        <ProjectPreview
+          ref={previewRef}
+          project={project}
+          isGenerating={isGenerating}
+          device={device}
+          showEditorPanel={true}
+        />
       </div>
     </div>
   ) : (
-    <div className='bg-black min-h-screen flex flex-col items-center justify-center text-white'>
-      <p className='text-2xl font-medium text-gray-200'> Unable to load project :(</p>
-      <button onClick={() => navigate('/')} className='mt-4 text-indigo-400 hover:underline'>Back to Home</button>
+    <div className='bg-[#0B0F19] min-h-screen flex flex-col items-center justify-center text-white gap-4'>
+      <p className='text-xl font-medium text-gray-300'>Unable to load project</p>
+      <button onClick={() => navigate('/projects')} className='px-6 py-2 rounded-full bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition'>
+        Back to My Projects
+      </button>
     </div>
   );
 };
 
-export default Projects
+export default Projects;
