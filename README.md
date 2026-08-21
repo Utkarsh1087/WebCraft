@@ -14,7 +14,7 @@
 
 **An enterprise-grade, high-performance AI website generator and live customization studio.**
 
-[Live Demo](http://localhost:5173) • [API Documentation](#api-endpoints) • [Benchmark Reports](./docs/performance-results.md)
+[Live Demo](http://localhost:5173) • [API Documentation](#-api-endpoints) • [Benchmark Reports](./docs/performance-results.md)
 
 </div>
 
@@ -22,12 +22,19 @@
 
 ## 🌟 Highlights & Key Features
 
-- ⚡ **AI-Powered Website Generation**: Describe any web application or landing page and get an interactive, responsive Tailwind CSS website in seconds.
+- ⚡ **AI-Powered Website Generation**: Describe any web application or landing page in natural language and get an interactive, responsive Tailwind CSS v4 website in seconds.
 - 🎨 **Live Studio Workspace**: Real-time iframe preview sandbox with responsive device toggles (Phone, Tablet, Desktop).
-- 💬 **Iterative AI Revisions & Chat**: Converse with the AI to refine components, change layouts, tweak color palettes, and add animations.
+- 💬 **Iterative AI Revisions & Chat**: Converse with the AI assistant to refine components, change layouts, tweak color palettes, and add animations.
 - 🕒 **Version History & Instant Rollback**: Automated point-in-time code snapshots with 1-click version rollbacks.
-- 🚀 **1-Click Publishing & Community Gallery**: Publish creations to a public community showcase or download complete standalone HTML bundles.
+- 🚀 **1-Click Download & Community Gallery**: Download complete standalone HTML/Tailwind bundles with zero vendor lock-in, or explore public community creations.
 - 🛡️ **Zero-Downtime Multi-Model Resilience**: Dual-engine AI adapter supporting Google Gemini REST API and OpenRouter with automatic dynamic fallback generation.
+- 🎠 **Interactive Modern Landing Page**:
+  - **Horizontal Sliding Starter Prompts**: Infinite marquee pills for 1-click prompt inspiration with pause-on-hover.
+  - **3-Step Workflow**: Frosted glass step cards with silver-gray gradient typography.
+  - **Bento Grid Feature Showcase**: Highlights live sandboxing, AI chat revisions, version rollbacks, standalone code, and engine resilience.
+  - **Community Showcase**: Live scaled iframe previews of community-generated websites.
+  - **Interactive FAQ Accordion**: Expandable answers to code ownership, deployment, and customization questions.
+  - **High-Converting CTA Banner**: Glowing neon action banner.
 
 ---
 
@@ -101,10 +108,11 @@ cd WebCraft
 cd server
 npm install
 cp .env.example .env
-# Configure DATABASE_URL and AI_API_KEY in .env
+# Configure DATABASE_URL and AI API keys in .env
 npx prisma db push
 npm start
 ```
+> *Backend server will run on `http://localhost:3000` with auto-reload via `tsx watch`.*
 
 ### 3. Frontend Setup
 ```bash
@@ -112,8 +120,7 @@ cd ../client
 npm install
 npm run dev
 ```
-
-Visit **`http://localhost:5173`** to access WebCraft!
+> *Frontend Vite dev server will run on `http://localhost:5173`.*
 
 ---
 
@@ -137,7 +144,7 @@ curl http://localhost:3000/metrics   # Prometheus Telemetry
 ## 🧪 Automated Testing & Benchmarking
 
 ```bash
-# Run unit & API integration tests (15/15 passing)
+# Run unit & API integration tests (30/30 passing)
 cd server
 npm test
 

@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import type { Project } from '../types/index.ts';
 import { Loader2Icon } from 'lucide-react';
-import { PlusIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { dummyProjects } from '../assets/assets';
-import { TrashIcon } from 'lucide-react';
-
 
 const Community = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
 

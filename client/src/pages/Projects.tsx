@@ -1,7 +1,7 @@
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { Project } from '../types/index'
-import { Loader2Icon, Tablet, LaptopIcon, SmartphoneIcon, SaveIcon, FullscreenIcon, ArrowBigDownDashIcon, EyeIcon, PanelLeft, PanelLeftClose, ChevronLeft } from 'lucide-react'
+import { Loader2Icon, Tablet, LaptopIcon, SmartphoneIcon, SaveIcon, FullscreenIcon, ArrowBigDownDashIcon, PanelLeft, PanelLeftClose, ChevronLeft } from 'lucide-react'
 import api from '@/configs/axios'
 import Sidebar from '../components/Sidebar'
 import ProjectPreview, { type ProjectPreviewRef } from '../components/ProjectPreview'
@@ -111,18 +111,7 @@ const Projects = () => {
     document.body.removeChild(element);
   };
 
-  const togglePublish = async () => {
-    if (!projectId) return;
-    try {
-      const { data } = await api.post(`/api/user/project/publish/${projectId}`);
-      toast.success(data.message || (data.isPublished ? "Project Published Successfully" : "Project Unpublished"));
-      if (project) {
-        setProject({ ...project, isPublished: data.isPublished });
-      }
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || error.message);
-    }
-  };
+
 
   useEffect(() => {
     if (session?.user) {
@@ -265,17 +254,7 @@ const Projects = () => {
             <span>Download</span>
           </button>
 
-          {/* Publish Toggle */}
-          <button
-            onClick={togglePublish}
-            className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 text-xs font-bold rounded-xl transition active:scale-95 cursor-pointer ${project.isPublished
-              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
-              : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90 shadow-md shadow-indigo-500/20'
-              }`}
-          >
-            <EyeIcon size={14} />
-            <span>{project.isPublished ? 'Published' : 'Publish'}</span>
-          </button>
+
 
           <div className="pl-1">
             <UserButton size="sm" />

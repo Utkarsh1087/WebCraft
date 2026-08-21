@@ -32,27 +32,29 @@ const Pricing = () => {
         <div className='pt-14 py-4 px-4 '>
           <div className='grid grid-cols-1 md:grid-cols-3 flex-wrap gap-4'>
             {plans.map((plan, idx) => (
-              <div key={idx} className="p-6 bg-black/20 ring ring-indigo-950 mx-auto w-full max-w-sm rounded-lg text-white shadow-lg hover:ring-indigo-500 transition-all duration-400">
-                <h3 className="text-xl font-bold">{plan.name}</h3>
-                <div className="my-2">
-                  <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-gray-300"> / {plan.credits} credits</span>
+              <div key={idx} className="p-6 bg-black/20 ring ring-indigo-950 mx-auto w-full max-w-sm rounded-lg text-white shadow-lg hover:ring-indigo-500 transition-all duration-400 flex flex-col justify-between h-full">
+                <div>
+                  <h3 className="text-xl font-bold">{plan.name}</h3>
+                  <div className="my-2">
+                    <span className="text-4xl font-bold">{plan.price}</span>
+                    <span className="text-gray-300"> / {plan.credits} credits</span>
+                  </div>
+
+                  <p className="text-gray-300 mb-6 min-h-[40px] flex items-center justify-center">{plan.description}</p>
+
+                  <ul className="space-y-1.5 mb-6 text-sm">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-center">
+                        <svg className="h-5 w-5 text-indigo-300 mr-2 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-gray-400">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-
-                <p className="text-gray-300 mb-6">{plan.description}</p>
-
-                <ul className="space-y-1.5 mb-6 text-sm">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-center">
-                      <svg className="h-5 w-5 text-indigo-300 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="text-gray-400">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button onClick={() => handlePurchase(plan.id)} className="w-full py-2 px-4 bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-sm rounded-md transition-all">
+                <button onClick={() => handlePurchase(plan.id)} className="w-full mt-auto py-2.5 px-4 bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-sm font-semibold rounded-md transition-all cursor-pointer shadow-md">
                   Buy Now
                 </button>
               </div>
