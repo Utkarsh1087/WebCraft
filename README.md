@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![WebCraft Banner](https://res.cloudinary.com/deuiyparu/image/upload/v1787264165/webcraft_preview.png)
+![WebCraft Banner](./assets/banner.svg)
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg?logo=react)](https://react.dev/)
